@@ -17,7 +17,7 @@ list.files()
 
 
 X=pareto.IS # 1745 lipids
-y<-H$BMI # 126 body mass index values for each patient
+y<-H$BMI # body mass index values for each patient
 nIter=200000 #Long Markov Chain of 200,000 iterations
 burnIn=50000 #Number of iterations to discard for burn in
 
