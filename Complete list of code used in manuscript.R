@@ -1,6 +1,6 @@
-###########################
+##############################
 ######  Loading Data  ########
-###########################
+##############################
 
 load("human.data.rda") # Object H. Identifier data of 126 study participants, includes: age, smoking, BMI, WC, 
 	# serum markers
@@ -10,9 +10,9 @@ dim(IS.mean) # 126 rows and 1745 lipids
 all.equal.character(rownames(H), rownames(IS.mean)) #The identifier data for each patient is aligned with their 
 # lipidomic data
 
-#############################
+#################################
 ######  Scaling of Data  ########
-############################
+#################################
 
 #### Pareto Scaling of Internal Standard Normalize Mean imputed Data  #####
   install.packages("MetabolAnalyze")
@@ -56,9 +56,9 @@ for (i in 1:ncol(H)){
   tmp[i,4]=tmpgetp[[3]]
 }
 
-######################################
+#############################################
 ######  Bayesian Analysis of Traits  ########
-######################################
+#############################################
 
 #### Reproducing Kernel Hilbert Spaces (RKHS) Regressions ####
  install.packages("BGLR")
@@ -109,9 +109,9 @@ for (i in 1:ncol(H)){
 	# the y<- for each individual response  #######
 
 
-################################
+#####################################
 #####  Single Lipid Regressions #####
-###############################
+#####################################
 
 ### Setting the model response and independent variables ###
 	X=pareto.IS # Data set
