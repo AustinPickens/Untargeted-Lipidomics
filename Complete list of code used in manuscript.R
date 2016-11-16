@@ -103,7 +103,7 @@ for (i in 1:ncol(H)){
    ## Calculating percent of the inter-individual differences in response variables that can be 
      # attributed to lipidome profiles ##
      tmp=(VarU/(VarU+VarE))*100 # Calculate % varU as sum of varU + varE
-     round(quantile(tmp, probs = c(0.05, 0.95)),0) # Determine 95% confidence intervals
+     round(quantile(tmp, probs = c(0.025, 0.975)),0) # Determine 95% confidence intervals
      
 ###### The other responses were run similarly by creating individual directories for each response and modifying 
 	# the y<- for each individual response  #######
