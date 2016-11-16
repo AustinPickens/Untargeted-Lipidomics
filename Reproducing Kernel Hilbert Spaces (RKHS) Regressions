@@ -1,57 +1,48 @@
-### Reproducing Kernel Hilbert Spaces (RKHS) Regressions 
+#### Reproducing Kernel Hilbert Spaces (RKHS) Regressions ####
+ install.packages("BGLR")
+ library(BGLR)
+  # For more information on using BGLR refer to https://github.com/gdlc/BGLR-R
+ 
+ ### Creating a directory to store file outputs from BGLR ###
+ dir.create("BMI"); setwd("BMI")
+ getwd() # Verify working directory 
 
-load("Human.data.rda") #Responses or traits used. n=126
-load("pareto.scaled.rda) #Internal standard normalized, mean imputed, and pareto scaled high resolution lipidomic data p=1745.
-
-install.packages("BGLR")
-library(BGLR)
-  # for more information on using BGLR refer to https://github.com/gdlc/BGLR-R
-
-### creating directories to store file outputs from BGLR ###
-dir.create("Bayesian")
-setwd("Bayesian")
-dir.create("BMI")
-setwd("BMI")
-getwd() # Verify working directory 
-list.files()
-
-
-X=pareto.IS # 1745 lipids
-y<-H$BMI # body mass index values for each patient
-nIter=200000 #Long Markov Chain of 200,000 iterations
-burnIn=50000 #Number of iterations to discard for burn in
-
-
-    ### Computing the metabolomic similarity matrix ###
-    K<-sum(apply(X=X,FUN=var,MARGIN=2))
-    G<-tcrossprod(X)/K # the G matrix is an nxn matrix of distances to measure similarities
+ ### Setting response, lipidomic data, iterations, and burn in  ###
+ X=pareto.IS # 1,745 pareto scaled lipidomic data
+ y<-H$BMI # Response: body mass index values for each respective patient
+ nIter=200000 # Long Markov Chain of 200,000 iterations
+ burnIn=50000 # Number of iterations to discard for burn in
+ 
+     ## Computing the metabolomic similarity matrix ##
+     L<-sum(apply(X=X,FUN=var,MARGIN=2))
+     G<-tcrossprod(X)/L 
+      # The G matrix is an nxn matrix of distances to measure similarities
         # between participants with respect to their lipid profiles
-    
-        
-        # ETA #
-        ETA.FixMet=list(Met=list(K=G,model="RKHS"), # the G matrix represents the lipidome, using the RKHS kernel
-                Fix=list(~H$age+factor(H$SmokeUnk)+factor(H$Ysmoke), model="FIXED")) # the fixed effects of the model are age and smoking
-    
-        # Best Linear Unbiased Predictor (BLUP) Model  #
-        fmGBLUP<-BGLR(y=y,ETA=ETA.FixMet,
-                      nIter=nIter,burnIn=burnIn ,saveAt="GBLUP_")
+     
+     ##  RKHS model parameters  ## 
+      # ETA #
+      ETA.FixMet=list(Met=list(K=G,model="RKHS"), # The G matrix represents the lipidome, 
+                      # and the RKHS kernel is specified
+        Fix=list(~H$age+factor(H$smoking), model="FIXED")) # The fixed effects of the model are age and smoking
+     
+     ## RKHS regression ##
+     fmGBLUP<-BGLR(y=y,ETA=ETA.FixMet, nIter=nIter, burnIn=burnIn, saveAt="GBLUP_")
+        # RKHS model is: BMI = fixed effects + lipidomic data
+     
+ ### Variance of Best Linear Unbiased Predictor (BLUP) and variance of error ###
+   # inference was done based on one of every 5 samples of the last 150,000
+    # therefore, since the burn in was 50,000 we need to remove the first 10,000 samples
+ list.files()
+ VarU=scan("GBLUP_ETA_Met_varU.dat") #load in variance of the lipidome BLUP model (varU). Total of 30,000 	# lines.
+ VarU=VarU[-c(1:10000)] # remove the burn in iterations from varU
+ VarE=scan("GBLUP_varE.dat") # load in variance of the error (varE). Total of 30,000 lines.
+ VarE=VarE[-c(1:10000)] #remove the burn in iterations varE
+     
+   ## Calculating percent of the inter-individual differences in response variables that can be 
+     # attributed to lipidome profiles ##
+     tmp=(VarU/(VarU+VarE))*100 # Calculate % varU as sum of varU + varE
+     round(quantile(tmp, probs = c(0.05, 0.95)),0) # Determine 95% confidence intervals
+     
+###### The other responses were run similarly by creating individual directories for each response and modifying 
+	# the y<- for each individual response  #######
 
-
-# inference was done based on one of every 5 samples of the last 150,000
-  # therefore, since the burn in was 50,000 we removed the first 10,000 samples
-list.files()
-VarU=scan("GBLUP_ETA_Met_varU.dat") #load in variance of the lipidome BLUP model (varU). Total of 30,000 lines.
-VarU=VarU[-c(1:10000)] # remove the burnin iterations
-VarE=scan("GBLUP_varE.dat") # load in variance of the error (varE). Total of 30,000 lines.
-VarE=VarE[-c(1:10000)] #remove the burnin iterations
-
-# Next to determine the percent of the inter-individual differences in response variables that can be attributed to lipidome profiles
-tmp=(VarU/(VarU+VarE))*100 #calculate % variance U as sum of variance U + variance E
-round(quantile(tmp, probs = c(0.05, 0.95)),0) #determine 95% confidence intervals
-
-
-rm(VarU, VarE, fmGBLUP,K,G, ETA.FixMet, nIter, tmp, y, burnIn)
-setwd("..")
-
-###### The other response were run similarly by creating individual directories for each response and modifying the 
-    # y<- for each individual response  #######
